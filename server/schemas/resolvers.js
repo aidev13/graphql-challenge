@@ -1,4 +1,7 @@
 const { User } = require('../models')
+const { Book } = require('../models')
+const { signToken } = require('../utils/auth');
+const { AuthenticationError } = require('apollo-server-express');
 
 
 const resolvers = {
@@ -14,17 +17,29 @@ const resolvers = {
 
 
   Mutation: {
-    login: async (parent, args, context) => {
-      TODO //Implement logic
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        throw new AuthenticationError('Something went wrong!');
+      }
+      const correctPw = await user.isCorrectPassword(password);
+      if (!correctPw) {
+        throw new AuthenticationError('Something went wrong!');
+      }
+
+      const token = signToken(user);
+      return { token, user };
+
     },
     addUser: async (parent, args, context) => {
-      return await User.create()
+      return await User.create(args)
     },
     saveBook: async (parent, args, context) => {
-      // Implement your logic to resolve the 'saveBook' mutation here
+      return await Book.updateOne(arg.bookInput)
     },
     removeBook: async (parent, args, context) => {
-      // Implement your logic to resolve the 'removeBook' mutation here
+      return await Book.findById(args.bookId)
     },
   },
   User: {
